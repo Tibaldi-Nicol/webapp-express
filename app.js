@@ -1,28 +1,25 @@
+// Importa il modulo Express, una libreria per creare server web in Node.js
 const express = require('express');
+
+// Crea un'istanza dell'applicazione Express
 const app = express();
+
+// Definisce la porta su cui il server sarà in ascolto
 const port = 3000;
 
-// Import router films
-const filmsRouter = require('./routers/films');
+// Configura Express per servire file statici dalla cartella "public".
+// Questo permette di caricare risorse come immagini, CSS e JavaScript senza dover definire route specifiche.
+app.use(express.static('public'));
 
-// Middleware per parsing JSON (per API)
+// Configura Express per analizzare automaticamente i JSON nelle richieste HTTP.
+// Questo consente al server di gestire facilmente i dati inviati in formato JSON.
 app.use(express.json());
 
-// Usa router /films
-app.use('/films', filmsRouter);
+// Configura una route GET per la homepage ('/') che risponde con "Hello From Movies server!"
+app.get('/', (req, res) => res.send('Hello From Movies server!'));
 
-// Middleware per rotte non trovate
-app.use((req, res, next) => {
-  res.status(404).json({ error: 'Risorsa non trovata' });
-});
+// Avvia il server e lo mette in ascolto sulla porta specificata
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
-// Middleware gestione errori
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Errore interno del server' });
-});
 
-// Avvia server
-app.listen(port, () => {
-  console.log(`Server in ascolto sulla porta ${port}`);
-});
+//passaggi standard ripetuti  
