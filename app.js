@@ -13,6 +13,10 @@ const app = express();
 console.log()
 const port = process.env.SERVER_PORT ||3000  ;
 
+//importo custom middleware
+const errorHandler= require("./middlewares/errorsHandler");
+const notFound = require("./middlewares/notFound");
+
 // Configura Express per servire file statici dalla cartella "public".
 // Questo permette di caricare risorse come immagini, CSS e JavaScript senza dover definire route specifiche.
 app.use(express.static('public'));
@@ -23,6 +27,10 @@ app.use(express.json());
 
 // Configura una route GET per la homepage ('/') che risponde con "Hello From Movies server!"
 app.get('/', (req, res) => res.send('Hello From Movies server!'));
+
+app.use(notFound);
+app.use(errorHandler);
+
 
 // Avvia il server e lo mette in ascolto sulla porta specificata
 app.listen(port, () => console.log(`app listening on port ${port}!`));
