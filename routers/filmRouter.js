@@ -1,23 +1,21 @@
-// Importa il modulo Express, che permette di gestire le rotte dell'applicazione
 const express = require('express');
-
-// Crea un'istanza di Router di Express per definire le rotte in modo modulare
 const router = express.Router();
+const movieController = require('../controllers/movieController');
 
-// Importa il controller che gestisce le operazioni sui film
-const movieController = require('../controllers/movieController'); // Assicurati che il nome del file sia corretto
+console.log('🎬 Router film caricato');
 
-// Definisce una rotta GET per la homepage dei film, che richiama la funzione `index` nel controller
-router.get('/', movieController.index);
-
-// Definisce una rotta GET per ottenere un singolo film tramite il suo ID, con gestione degli errori
-router.get('/:id', async (req, res, next) => {
-    try {
-        await movieController.show(req, res);
-    } catch (error) {
-        next(error);
-    }
+// Rotta per ottenere tutti i film
+router.get('/', (req, res, next) => {
+  console.log('📋 Rotta GET / del router film chiamata');
+  movieController.index(req, res, next);
 });
 
-// Esporta il router per poterlo usare in altre parti dell'app
+// Rotta per ottenere un film con le recensioni tramite ID
+router.get('/:id', (req, res, next) => {
+  console.log(`🎯 Rotta GET /:id del router film chiamata con ID: ${req.params.id}`);
+  movieController.show(req, res, next);
+});
+
+console.log('✅ Router film configurato con rotte:', router.stack.length);
+
 module.exports = router;

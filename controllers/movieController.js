@@ -1,60 +1,74 @@
-// Importa la connessione al database
 const connection = require('../data/db');
 
-// Funzione per ottenere tutti i film
+// Ottiene tutti i film dal DB e aggiunge path immagine
 const index = (req, res) => {
-    connection.query("SELECT * FROM MOVIES", (err, result) => {
-        if (err) {
-            // Gestione errore del database
-            return res.status(500).json({ error: "Errore nel recupero dei film" });
-        }
-        // Invia l'elenco dei film come risposta
-        res.json(result);
+  console.log('🎬 Richiesta ricevuta per tutti i film');
+  console.log('🖼️ Image path disponibile:', req.setImagePath);
+  
+  const sql = 'SELECT * FROM movies';
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error('❌ Errore DB:', err);
+      return res.status(500).json({ error: 'Errore nel recupero dei film' });
+    }
+    
+    console.log('📊 Risultati dal DB:', results);
+    console.log('📝 Numero di film trovati:', results.length);
+    
+    // Mappa i risultati aggiungendo il percorso completo delle immagini
+    const movies = results.map((movie) => {
+      return {
+        ...movie,
+        image: `${req.setImagePath}/${movie.image}`
+      }
     });
+    
+    console.log('✅ Film processati con immagini:', movies);
+    
+    // ⭐ QUESTO È IL PUNTO CRITICO - INVIA LA RISPOSTA
+    console.log('📤 Invio risposta JSON...');
+    res.json(movies);
+    console.log('✅ Risposta inviata con successo!');
+  });
 };
 
-// Funzione per mostrare i dettagli di un singolo film + recensioni
+// Ottiene un film per ID con le sue recensioni
 const show = (req, res) => {
-    // Recupera l'id del film dalla URL (es: /api/films/2)
-    const { id } = req.params;
-
-    // Query per recuperare i dettagli del film specifico
-    const movieSql = "SELECT * FROM MOVIES WHERE id = ?";
-
-    // Query per recuperare le recensioni associate a quel film
-    const reviewsSql = "SELECT * FROM REVIEWS WHERE movie_id = ?";
-
-    // Esegui la prima query per ottenere il film
-    connection.query(movieSql, [id], (err, movieResult) => {
-        if (err) {
-            return res.status(500).json({ error: "Errore nel recupero del film" });
-        }
-
-        if (movieResult.length === 0) {
-            // Nessun film trovato con quell'id
-            return res.status(404).json({ error: "Film non trovato" });
-        }
-
-        // Esegui la seconda query per ottenere le recensioni
-        connection.query(reviewsSql, [id], (err, reviewsResult) => {
-            if (err) {
-                return res.status(500).json({ error: "Errore nel recupero delle recensioni" });
-            }
-
-            // Costruisci l'oggetto finale: film + recensioni
-            const filmConRecensioni = {
-                ...movieResult[0], // info del film
-                reviews: reviewsResult // array di recensioni
-            };
-
-            // Invia il risultato finale
-            res.json(filmConRecensioni);
-        });
+  const { id } = req.params;
+  console.log(`🎯 Richiesta per film ID: ${id}`);
+  
+  const movieSql = 'SELECT * FROM movies WHERE id = ?';
+  const reviewsSql = 'SELECT * FROM reviews WHERE movie_id = ?';
+  
+  connection.query(movieSql, [id], (err, movieResult) => {
+    if (err) {
+      console.error('❌ Errore nel recupero del film:', err);
+      return res.status(500).json({ error: 'Errore nel recupero del film' });
+    }
+    
+    if (movieResult.length === 0) {
+      console.log('❌ Film non trovato per ID:', id);
+      return res.status(404).json({ error: 'Film non trovato' });
+    }
+    
+    const film = movieResult[0];
+    film.image = `${req.setImagePath}/${film.image}`;
+    console.log('🎬 Film trovato:', film);
+    
+    connection.query(reviewsSql, [id], (err, reviewsResult) => {
+      if (err) {
+        console.error('❌ Errore nel recupero recensioni:', err);
+        return res.status(500).json({ error: 'Errore nel recupero recensioni' });
+      }
+      
+      console.log('⭐ Recensioni trovate:', reviewsResult.length);
+      film.reviews = reviewsResult;
+      
+      console.log('📤 Invio risposta film singolo...');
+      res.json(film);
+      console.log('✅ Risposta film singolo inviata!');
     });
+  });
 };
 
-// Esporta le funzioni per usarle nel router
-module.exports = {
-    index,
-    show
-};
+module.exports = { index, show };

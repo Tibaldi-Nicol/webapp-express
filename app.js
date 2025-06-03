@@ -1,39 +1,61 @@
-// Importa il modulo Express, una libreria per creare server web in Node.js
+// Importa il modulo Express
 const express = require('express');
-//importo dotenv
-//const dotenv=require('dotenv')
+require('dotenv').config();
 
-//utilizziamo la variabile dotenv richiamando il suo metodo config()
-//dotenv.config()
-
-// Crea un'istanza dell'applicazione Express
 const app = express();
+const port = process.env.SERVER_PORT || 3000;
 
-// Definisce la porta su cui il server sarà in ascolto
-console.log()
-const port = process.env.SERVER_PORT ||3000  ;
+console.log(`🚀 Server avviato sulla porta ${port}`);
 
-//importo custom middleware
-const errorHandler= require("./middlewares/errorsHandler");
+// Import middleware e router
+const setImagePath = require('./middlewares/setImagePath');
+const movieRouter = require('./routers/filmRouter');
+const errorHandler = require("./middlewares/errorsHandler");
 const notFound = require("./middlewares/notFound");
 
-// Configura Express per servire file statici dalla cartella "public".
-// Questo permette di caricare risorse come immagini, CSS e JavaScript senza dover definire route specifiche.
+// ✅ MIDDLEWARE NELL'ORDINE CORRETTO
+console.log('📝 Configurazione middleware...');
+
+// File statici
 app.use(express.static('public'));
+console.log('✅ Static files middleware configurato');
 
-// Configura Express per analizzare automaticamente i JSON nelle richieste HTTP.
-// Questo consente al server di gestire facilmente i dati inviati in formato JSON.
+// JSON parsing
 app.use(express.json());
+console.log('✅ JSON middleware configurato');
 
-// Configura una route GET per la homepage ('/') che risponde con "Hello From Movies server!"
-app.get('/', (req, res) => res.send('Hello From Movies server!'));
+// Image path middleware
+app.use(setImagePath);
+console.log('✅ Image path middleware configurato');
 
+// ✅ ROTTE DI TEST
+app.get('/test', (req, res) => {
+  console.log('🧪 Rotta /test chiamata');
+  res.json({ message: '✅ Il server risponde correttamente!' });
+});
+
+app.get('/', (req, res) => {
+  console.log('🏠 Rotta homepage chiamata');
+  res.send('Hello From Movies server!');
+});
+
+// ✅ ROUTER PRINCIPALE
+console.log('🎬 Configurazione router film...');
+app.use('/api/films', (req, res, next) => {
+  console.log(`🎯 Router film chiamato: ${req.method} ${req.originalUrl}`);
+  next();
+}, movieRouter);
+
+// ✅ MIDDLEWARE DI GESTIONE ERRORI (SEMPRE ALLA FINE)
 app.use(notFound);
 app.use(errorHandler);
 
-
-// Avvia il server e lo mette in ascolto sulla porta specificata
-app.listen(port, () => console.log(`app listening on port ${port}!`));
-
-
-//passaggi standard ripetuti  
+// Avvio server
+app.listen(port, () => {
+  console.log(`🌍 Server in ascolto sulla porta ${port}!`);
+  console.log(`📋 Rotte disponibili:`);
+  console.log(`   GET http://localhost:${port}/`);
+  console.log(`   GET http://localhost:${port}/test`);  
+  console.log(`   GET http://localhost:${port}/api/films`);
+  console.log(`   GET http://localhost:${port}/api/films/:id`);
+});
